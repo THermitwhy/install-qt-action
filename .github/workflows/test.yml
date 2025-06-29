@@ -35,16 +35,6 @@ jobs:
         src-doc-examples:
           - false
         qt:
-          - version: "5.9.0"
-            requested: "5.9.0"
-            modules: qtwebengine
-          - version: "5.15.2"
-            requested: "5.15"
-            modules: qtwebengine
-          - version: "6.3.2"  # Qt 6.3 is not an LTS version, so '6.3.*' always resolves to '6.3.2'
-            requested: "6.3.*"
-            # In Qt 6.2.0+, qtwebengine requires qtpositioning and qtwebchannel
-            modules: qtwebengine qtpositioning qtwebchannel
           - version: "6.7.0"
             requested: "6.7.0"
             modules: qtwebengine qtpositioning qtwebchannel
