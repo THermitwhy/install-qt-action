@@ -111,6 +111,7 @@ jobs:
         shell: cmd
 
       - name: Archive production artifacts
+        if: ${{ matrix.qt.version && startsWith(matrix.os, 'windows') && !matrix.skip-test-project }}
         uses: actions/upload-artifact@v4
         with:
           name: dist-without-markdown
