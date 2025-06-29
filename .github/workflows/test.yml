@@ -30,7 +30,6 @@ jobs:
       matrix:
         os:
           - windows-2022
-          - windows-2019
         aqtversion:
           - null  # use whatever the default is
         src-doc-examples:
@@ -52,21 +51,14 @@ jobs:
           - tools-only-build: true
             add-tools-to-path: true
         cache:
-          - cached
           - uncached
         include:
-          - os: windows-latest
+          - os: windows-2022
             dir: '/'
             qt:
               version: "6.7.0"
               requested: "6.7.0"
               modules: qtwebengine qtpositioning qtwebchannel
-          - os: windows-11-arm
-            skip-test-project: true
-            qt:
-              version: "6.8.1"
-              requested: "6.8.1"
-              modules: qtpositioning qtwebchannel
 
 
     steps:
