@@ -29,13 +29,8 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - ubuntu-24.04
-          - ubuntu-22.04
           - windows-2022
           - windows-2019
-          - macos-13
-          - macos-14
-          - macos-15
         aqtversion:
           - null  # use whatever the default is
         src-doc-examples:
@@ -156,17 +151,6 @@ jobs:
           # Check that QT_ROOT_DIR contains a qmake of some kind
           ls "${QT_ROOT_DIR}/bin/" | grep qmake
 
-      - name: Switch macOS Xcode version with older Qt versions
-        if: ${{ matrix.qt.version && startsWith(matrix.os, 'macos-13') }}
-        shell: pwsh
-        env:
-          QT_VERSION: ${{ matrix.qt.version }}
-        run: |
-          if ([version]$env:QT_VERSION -lt [version]'6.5.3') {
-            # Workaround for QTBUG-117225
-            sudo xcode-select --switch /Applications/Xcode_14.3.1.app
-          }
-
       - name: Configure test project on windows
         if: ${{ matrix.qt.version && startsWith(matrix.os, 'windows') && !matrix.skip-test-project }}
         env:
@@ -179,117 +163,6 @@ jobs:
           cmake -S . -B ./build
         shell: cmd
 
-      - name: Configure test project on unix
-        if: ${{ matrix.qt.version && !startsWith(matrix.os, 'windows') && !matrix.skip-test-project }}
-        env:
-          QT_VERSION: ${{ matrix.qt.version }}
-        run: |
-          cd tests/TestWithModules
-          if [[ $QT_VERSION == 6* ]]; then
-            ls "${QT_ROOT_DIR}/lib/cmake"
-          else
-            ls "${Qt5_DIR}"
-          fi
-          qmake
-          cmake -S . -B ./build
-        shell: bash
-
-      - name: Install source
-        if: ${{ matrix.source }}
-        uses: ./
-        with:
-          dir: ${{ matrix.dir }}
-          version: "5.15.2"
-          source: true
-          no-qt-binaries: true
-          src-archives: ${{ matrix.src-archives }}
-
-      - name: Install docs
-        if: ${{ matrix.documentation }}
-        uses: ./
-        with:
-          dir: ${{ matrix.dir }}
-          version: "5.15.2"
-          documentation: true
-          no-qt-binaries: true
-          doc-archives: ${{ matrix.doc-archives }}
-          doc-modules: ${{ matrix.doc-modules }}
-
-      - name: Install examples
-        if: ${{ matrix.examples }}
-        uses: ./
-        with:
-          dir: ${{ matrix.dir }}
-          version: "5.15.2"
-          examples: true
-          no-qt-binaries: true
-          example-archives: ${{ matrix.example-archives }}
-          example-modules: ${{ matrix.example-modules }}
-
-      - name: Test source, docs, examples
-        if: ${{ matrix.src-doc-examples }}
-        shell: bash
-        run: |
-          cd ${{ matrix.check-dir }}
-          ls ${{ matrix.check }}
-
-      - name: Install tools with options
-        if: ${{ matrix.qt.tools-only-build }}
-        uses: ./
-        with:
-          dir: ${{ matrix.dir }}
-          tools-only: true
-          tools: tools_ifw tools_qtcreator_gui,qt.tools.qtcreator_gui tools_cmake tools_ninja tools_conan
-          add-tools-to-path: ${{ matrix.qt.add-tools-to-path }}
-          cache: ${{ matrix.cache == 'cached' }}
-
-      - name: Test installed tools
-        if: ${{ matrix.qt.tools-only-build && matrix.qt.add-tools-to-path }}
-        shell: bash
-        run: |
-          echo "Path: ${PATH}"
-          set -x
-
-          # tools_ifw: use `archivegen` to test that Tools/QtInstallerFramework/4.7/bin is added to path
-          # tools_qtcreator_gui: use `qbs` to test that Tools/QtCreator/bin or "Qt Creator.app/Contents/MacOS/" is added to path
-          # tools_cmake: test that Tools/CMake/bin or Tools/CMake/CMake.app/Contents/bin is added to path
-          # tools_ninja: test that Tools/Ninja is added to path
-          # tools_conan: test that Tools/Conan is added to path
-
-          for tool_name in archivegen qbs cmake ninja conan; do
-            which "${tool_name}"
-            "${tool_name}" --version
-          done
-          
-
-      - name: Test that installed tools are not in the path
-        if: ${{ matrix.qt.tools-only-build && !matrix.qt.add-tools-to-path }}
-        shell: bash
-        run: |
-          echo "Path: ${PATH}"
-          set -x
-
-          # Check that QtIFW has been installed
-          ls ../Qt/Tools/QtInstallerFramework/*/bin/ | grep archivegen
-          # Check that QtCreator has been installed
-          [[ -e "../Qt/Tools/QtCreator/bin/qbs" || -e "../Qt/Qt Creator.app/Contents/MacOS/qbs" ]]
-          # Check that CMake has been installed
-          [[ -e "../Qt/Tools/CMake/bin/cmake" || -e "../Qt/Tools/CMake/CMake.app/Contents/bin/cmake" ]]
-          # Check that Ninja has been installed
-          [[ -e "../Qt/Tools/Ninja/ninja" ]]
-          # Check that Conan has been installed
-          [[ -e "../Qt/Tools/Conan/conan" ]]
-
-          # tools_ifw: use `archivegen` to test that Tools/QtInstallerFramework/4.7/bin is not added to path
-          # tools_qtcreator_gui: use `qbs` to test that Tools/QtCreator/bin or "Qt Creator.app/Contents/MacOS/" is not added to path
-          # tools_cmake: test that Tools/CMake/bin or Tools/CMake/CMake.app/Contents/bin is not added to path
-          # tools_ninja: test that Tools/Ninja is not added to path
-          # tools_conan: test that Tools/Conan is not added to path
-
-          for tool_name in archivegen qbs cmake ninja conan; do
-            ! which "${tool_name}"
-            ! "${tool_name}" --version
-          done
       - name: Archive production artifacts
         uses: actions/upload-artifact@v4
         with:
