@@ -179,13 +179,6 @@ jobs:
           cmake -S . -B ./build
         shell: cmd
 
-      - name: Archive production artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist-without-markdown
-          path: |
-            dist
-            !dist/**/*.md
       - name: Configure test project on unix
         if: ${{ matrix.qt.version && !startsWith(matrix.os, 'windows') && !matrix.skip-test-project }}
         env:
@@ -297,3 +290,9 @@ jobs:
             ! which "${tool_name}"
             ! "${tool_name}" --version
           done
+      - name: Archive production artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-without-markdown
+          path: |
+            tests/TestWithModules
